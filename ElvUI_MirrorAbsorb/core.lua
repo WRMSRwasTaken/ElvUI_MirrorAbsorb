@@ -116,6 +116,8 @@ function MA:Configure_HealComm(frame)
 		local parent = pred.parent
 		local myBar = pred.myBar
 		local otherBar = pred.otherBar
+		local absorbBar = pred.absorbBar
+		local healAbsorbBar = pred.healAbsorbBar
 
 		local overHealAbsorbBar = pred.overHealAbsorbBar
 		local overAbsorbBar = pred.overAbsorbBar
@@ -138,13 +140,8 @@ function MA:Configure_HealComm(frame)
 
 		UF:SetTexture_HealComm(pred, UF.db.colors.transparentHealth and E.media.blankTex or LSM:Fetch('statusbar', UF.db.statusbar))
 
-		if db.absorbStyle == 'REVERSED' then
-			overHealAbsorbBar:SetReverseFill(not reverseFill)
-			overAbsorbBar:SetReverseFill(not reverseFill)
-		else
-			overHealAbsorbBar:SetReverseFill(reverseFill)
-			overAbsorbBar:SetReverseFill(reverseFill)
-		end
+		overHealAbsorbBar:SetReverseFill(not reverseFill)
+		overAbsorbBar:SetReverseFill(reverseFill)
 
 		overHealAbsorbBar:SetStatusBarColor(colors.overhealabsorbs.r, colors.overhealabsorbs.g, colors.overhealabsorbs.b, colors.overhealabsorbs.a)
 		overAbsorbBar:SetStatusBarColor(colors.overabsorbs.r, colors.overabsorbs.g, colors.overabsorbs.b, colors.overabsorbs.a)
@@ -159,6 +156,10 @@ function MA:Configure_HealComm(frame)
 			local anchor = db.anchorPoint
 			pred.anchor, pred.anchor1, pred.anchor2 = anchor, p1, p2
 
+			-- we're always letting the healabsorb bar backfill because overhealabsorbs will be displayed with another bar
+			healAbsorbBar:ClearAllPoints()
+			healAbsorbBar:Point(pred.anchor2, pred.healthBarTexture, pred.anchor2)
+
 			overHealAbsorbBar:ClearAllPoints()
 			overHealAbsorbBar:Point(anchor, health)
 
@@ -167,12 +168,6 @@ function MA:Configure_HealComm(frame)
 
 			parent:ClearAllPoints()
 			parent:Point(p1, health, p1)
-
-			if db.absorbStyle == 'REVERSED' then
-				--absorbBar:Point(p2, health, p2)
-			else
-				--absorbBar:Point(p1, pred.otherBarTexture, p2)
-			end
 		else
 			local p1 = reverseFill and 'TOP' or 'BOTTOM'
 			local p2 = reverseFill and 'BOTTOM' or 'TOP'
@@ -182,6 +177,10 @@ function MA:Configure_HealComm(frame)
 			local anchor = (db.anchorPoint == 'BOTTOM' and 'RIGHT') or (db.anchorPoint == 'TOP' and 'LEFT') or db.anchorPoint
 			pred.anchor, pred.anchor1, pred.anchor2 = anchor, p1, p2
 
+			-- we're always letting the healabsorb bar backfill because overhealabsorbs will be displayed with another bar
+			healAbsorbBar:ClearAllPoints()
+			healAbsorbBar:Point(pred.anchor2, pred.healthBarTexture, pred.anchor2)
+
 			overHealAbsorbBar:ClearAllPoints()
 			overHealAbsorbBar:Point(anchor, health)
 
@@ -190,24 +189,22 @@ function MA:Configure_HealComm(frame)
 
 			parent:ClearAllPoints()
 			parent:Point(p1, health, p1)
-
-			if db.absorbStyle == 'REVERSED' then
-				--absorbBar:Point(p2, health, p2)
-			else
-				--absorbBar:Point(p1, pred.otherBarTexture, p2)
-			end
 		end
 	elseif frame:IsElementEnabled('HealthPrediction') then
 		frame:DisableElement('HealthPrediction')
 	end
 end
 
-function MA:UpdateHealComm(_, myIncomingHeal, otherIncomingHeal, absorb, healAbsorb, hasOverAbsorb, hasOverHealAbsorb, health, maxHealth)
+function MA:UpdateHealComm(_, myIncomingHeal, otherIncomingHeal, absorb, healAbsorb, _, _, health, maxHealth)
 	local frame = self.frame
 	local db = frame and frame.db and frame.db.healPrediction
 	if not db or not db.absorbStyle then return end
 
 	local pred = frame.HealthPrediction
+
+	local myBar = pred.myBar
+	local otherBar = pred.otherBar
+
 	local healAbsorbBar = pred.healAbsorbBar
 	local absorbBar = pred.absorbBar
 
@@ -220,51 +217,40 @@ function MA:UpdateHealComm(_, myIncomingHeal, otherIncomingHeal, absorb, healAbs
 
 	MA:SetSize_HealComm(frame)
 
-	-- handle over heal absorbs
-	healAbsorbBar:ClearAllPoints()
-	healAbsorbBar:Point(pred.anchor, frame.Health)
-
 	-- mirrored absorb bar mode
 	if(absorb) then
-		if(health + absorb > maxHealth) then
-			if (health < maxHealth) then -- both bars need to be shown
+		if (health == maxHealth) then -- full health, so show the whole absorb on the overabsorb bar only
+			overAbsorbBar:SetValue(absorb) 
+			absorbBar:Hide()
+			overAbsorbBar:Show()
+		else
+			if(health + absorb > maxHealth) then -- absorbs and current health exceed the max health so both bars need to be shown
 				local missingHealth = maxHealth - health
 				absorbBar:SetValue(missingHealth) -- fill the healthbar to 100% with the absorb bar
 				overAbsorbBar:SetValue(absorb - missingHealth) -- display the remaining amount on the overabsorb bar on the mirrored side
 				absorbBar:Show()
 				overAbsorbBar:Show()
-			else -- full health, so show the whole absorb on the overabsorb bar only
-				overAbsorbBar:SetValue(absorb) 
-				absorbBar:Hide()
-				overAbsorbBar:Show()
+			else -- health and absorbs don't exceed max health, so only the absorb bar needs to be shown
+				absorbBar:SetValue(absorb)
+				absorbBar:Show()
+				overAbsorbBar:Hide()
 			end
-		else
-			absorbBar:SetValue(absorb)
-			absorbBar:Show()
-			overAbsorbBar:Hide()
 		end
 	else
 		absorbBar:Hide()
 		overAbsorbBar:Hide()
 	end
-
+ 
 	if(healAbsorb) then
-		if(health + healAbsorb > maxHealth) then
-			if (health < maxHealth) then -- both bars need to be shown
-				local missingHealth = maxHealth - health
-				healAbsorbBar:SetValue(missingHealth) -- fill the healthbar to 100% with the healabsorb bar
-				overHealAbsorbBar:SetValue(healAbsorb - missingHealth) -- display the remaining amount on the overhealabsorb bar on the mirrored side
-				healAbsorbBar:Show()
-				overHealAbsorbBar:Show()
-			else -- full health, so show the whole healabsorb on the overhealabsorb bar only
-				overHealAbsorbBar:SetValue(healAbsorb) 
-				healAbsorbBar:Hide()
-				overHealAbsorbBar:Show()
-			end
-		else
+		if(health - healAbsorb >= 0) then -- the unit still has some health left without healabsorbs, so only the healabsorb bar needs to be shown
 			healAbsorbBar:SetValue(healAbsorb)
 			healAbsorbBar:Show()
 			overHealAbsorbBar:Hide()
+		else -- the overhealabsorb is bigger than the unit's health, so both bars need to be shown
+			healAbsorbBar:SetValue(health) -- backfill the healthbar to 0% with the healabsorb bar
+			overHealAbsorbBar:SetValue(healAbsorb - health) -- display the remaining amount on the overhealabsorb bar on the mirrored side
+			healAbsorbBar:Show()
+			overHealAbsorbBar:Show()
 		end
 	else
 		healAbsorbBar:Hide()
