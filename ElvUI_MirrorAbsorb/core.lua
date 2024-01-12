@@ -17,6 +17,8 @@ function MA:Initialize()
 	self:SecureHook(UF, "Configure_HealComm", MA.Configure_HealComm)
 	self:RawHook(UF, "UpdateHealComm", MA.UpdateHealComm, true)
 
+	EP:RegisterPlugin(addonName, nil)
+
 	print(format("%sElvUI_MirrorAbsorb|r Version %s%s|r loaded.", E.media.hexvaluecolor, E.media.hexvaluecolor, GetAddOnMetadata("ElvUI_MirrorAbsorb", "Version")))
 end
 
@@ -25,8 +27,8 @@ function MA:SetAlpha_HealComm(obj, alpha)
 	obj.otherBar:SetAlpha(alpha)
 	obj.absorbBar:SetAlpha(alpha)
 	obj.healAbsorbBar:SetAlpha(alpha)
-	obj.overHealAbsorbBar:SetAlpha(alpha)
 	obj.overAbsorbBar:SetAlpha(alpha)
+	obj.overHealAbsorbBar:SetAlpha(alpha)
 end
 
 function MA:SetTexture_HealComm(obj, texture)
@@ -34,8 +36,8 @@ function MA:SetTexture_HealComm(obj, texture)
 	obj.otherBar:SetStatusBarTexture(texture)
 	obj.absorbBar:SetStatusBarTexture(texture)
 	obj.healAbsorbBar:SetStatusBarTexture(texture)
-	obj.overHealAbsorbBar:SetStatusBarTexture(texture)
 	obj.overAbsorbBar:SetStatusBarTexture(texture)
+	obj.overHealAbsorbBar:SetStatusBarTexture(texture)
 end
 
 function MA:SetFrameLevel_HealComm(obj, level)
@@ -43,8 +45,8 @@ function MA:SetFrameLevel_HealComm(obj, level)
 	obj.otherBar:SetFrameLevel(level)
 	obj.absorbBar:SetFrameLevel(level)
 	obj.healAbsorbBar:SetFrameLevel(level)
-	obj.overHealAbsorbBar:SetFrameLevel(level)
 	obj.overAbsorbBar:SetFrameLevel(level)
+	obj.overHealAbsorbBar:SetFrameLevel(level)
 end
 
 function MA:Construct_HealComm(frame)
@@ -56,8 +58,8 @@ function MA:Construct_HealComm(frame)
 		otherBar = CreateFrame('StatusBar', '$parent_OtherBar', parent),
 		absorbBar = CreateFrame('StatusBar', '$parent_AbsorbBar', parent),
 		healAbsorbBar = CreateFrame('StatusBar', '$parent_HealAbsorbBar', parent),
-		overHealAbsorbBar = CreateFrame('StatusBar', '$parent_OverHealAbsorbBar', parent),
 		overAbsorbBar = CreateFrame('StatusBar', '$parent_OverAbsorbBar', parent),
+		overHealAbsorbBar = CreateFrame('StatusBar', '$parent_OverHealAbsorbBar', parent),
 		PostUpdate = UF.UpdateHealComm,
 		maxOverflow = 1,
 		health = health,
