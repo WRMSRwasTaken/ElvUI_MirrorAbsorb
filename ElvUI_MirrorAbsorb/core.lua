@@ -229,7 +229,17 @@ function MA:UpdateHealComm(_, myIncomingHeal, otherIncomingHeal, absorb, healAbs
 			if(health + absorb > maxHealth) then -- absorbs and current health exceed the max health so both bars need to be shown
 				local missingHealth = maxHealth - health
 				absorbBar:SetValue(missingHealth) -- fill the healthbar to 100% with the absorb bar
-				overAbsorbBar:SetValue(absorb - missingHealth) -- display the remaining amount on the overabsorb bar on the mirrored side
+
+				-- display the remaining amount on the overabsorb bar on the mirrored side but
+				-- never draw over the absorbBar with the overAbsorbBar so it's still possible to see the health where both bars touch each other,
+				-- this only makes sense if you have different colors for absorbs and overabsorbs configured
+				-- so we're going to cap the overAbsorbBar here if the overabsorb is bigger than the current health
+				if(absorb - missingHealth > health) then
+					overAbsorbBar:SetValue(health)
+				else
+					overAbsorbBar:SetValue(absorb - missingHealth)
+				end
+
 				absorbBar:Show()
 				overAbsorbBar:Show()
 			else -- health and absorbs don't exceed max health, so only the absorb bar needs to be shown
@@ -249,8 +259,19 @@ function MA:UpdateHealComm(_, myIncomingHeal, otherIncomingHeal, absorb, healAbs
 			healAbsorbBar:Show()
 			overHealAbsorbBar:Hide()
 		else -- the overhealabsorb is bigger than the unit's health, so both bars need to be shown
+			local missingHealth = maxHealth - health
 			healAbsorbBar:SetValue(health) -- backfill the healthbar to 0% with the healabsorb bar
-			overHealAbsorbBar:SetValue(healAbsorb - health) -- display the remaining amount on the overhealabsorb bar on the mirrored side
+
+			-- display the remaining amount on the overhealabsorb bar on the mirrored side but also
+			-- never draw over the healAbsorbBar with the overHealAbsorbBar so it's still possible to see the health where both bars touch each other,
+			-- this also only makes sense if you have different colors for healabsorbs and overhealabsorbs configured
+			-- so we're going to cap the overHealAbsorbBar here if the overhealabsorb is bigger than the missing health
+			if(healAbsorb - health > missingHealth) then
+				overHealAbsorbBar:SetValue(missingHealth)
+			else
+				overHealAbsorbBar:SetValue(healAbsorb - health)
+			end
+
 			healAbsorbBar:Show()
 			overHealAbsorbBar:Show()
 		end
