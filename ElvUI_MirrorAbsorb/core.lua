@@ -57,8 +57,8 @@ function MA:Construct_HealComm(frame)
 		myBar = CreateFrame('StatusBar', '$parent_MyBar', parent),
 		otherBar = CreateFrame('StatusBar', '$parent_OtherBar', parent),
 		absorbBar = CreateFrame('StatusBar', '$parent_AbsorbBar', parent),
-		healAbsorbBar = CreateFrame('StatusBar', '$parent_HealAbsorbBar', parent),
 		overAbsorbBar = CreateFrame('StatusBar', '$parent_OverAbsorbBar', parent),
+		healAbsorbBar = CreateFrame('StatusBar', '$parent_HealAbsorbBar', parent),
 		overHealAbsorbBar = CreateFrame('StatusBar', '$parent_OverHealAbsorbBar', parent),
 		PostUpdate = UF.UpdateHealComm,
 		maxOverflow = 1,
@@ -92,9 +92,9 @@ function MA:SetSize_HealComm(frame)
 
 		pred.myBar:SetSize(width, barHeight)
 		pred.otherBar:SetSize(width, barHeight)
-		pred.healAbsorbBar:SetSize(width, barHeight)
 		pred.absorbBar:SetSize(width, barHeight)
 		pred.overAbsorbBar:SetSize(width, barHeight)
+		pred.healAbsorbBar:SetSize(width, barHeight)
 		pred.overHealAbsorbBar:SetSize(width, barHeight)
 		pred.parent:SetSize(width * (pred.maxOverflow or 0), height)
 	else
@@ -103,9 +103,9 @@ function MA:SetSize_HealComm(frame)
 
 		pred.myBar:SetSize(barWidth, height)
 		pred.otherBar:SetSize(barWidth, height)
-		pred.healAbsorbBar:SetSize(barWidth, height)
 		pred.absorbBar:SetSize(barWidth, height)
 		pred.overAbsorbBar:SetSize(barWidth, height)
+		pred.healAbsorbBar:SetSize(barWidth, height)
 		pred.overHealAbsorbBar:SetSize(barWidth, height)
 		pred.parent:SetSize(width, height * (pred.maxOverflow or 0))
 	end
@@ -119,10 +119,9 @@ function MA:Configure_HealComm(frame)
 		local myBar = pred.myBar
 		local otherBar = pred.otherBar
 		local absorbBar = pred.absorbBar
-		local healAbsorbBar = pred.healAbsorbBar
-
-		local overHealAbsorbBar = pred.overHealAbsorbBar
 		local overAbsorbBar = pred.overAbsorbBar
+		local healAbsorbBar = pred.healAbsorbBar
+		local overHealAbsorbBar = pred.overHealAbsorbBar
 
 		local colors = UF.db.colors.healPrediction
 
