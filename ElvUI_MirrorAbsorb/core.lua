@@ -5,9 +5,16 @@ local LSM = E.Libs.LSM
 local EP = LibStub("LibElvUIPlugin-1.0")
 
 local addonName, Engine = ...
-local GetAddOnMetadata  = GetAddOnMetadata
+local C_AddOns_GetAddOnMetadata = C_AddOns.GetAddOnMetadata
 
 function MA:Initialize()
+	-- We are basically hooking every function in Core/Modules/UnitFrames/Elements/HealPrediction.lua with a RawHook,
+	-- which means we're replacing the original functions with those below.
+	-- This might not be needed and could be replaced with SecureHook and remove the init functions for all bars
+	-- except our new overAbsorbBar and overHealAbsorbBar bars. This needs to be tested and could result in less code in this file.
+	-- We're already only doing a SecureHook on Configure_HealComm because we actually don't need to touch the initialization there
+	-- of myBar, otherBar, absorbBar and healAbsorbBar, so we're just cloning those steps there for our new overAbsorbBar and overHealAbsorbBar.
+
 	self:RawHook(UF, "SetAlpha_HealComm", MA.SetAlpha_HealComm, true)
 	self:RawHook(UF, "SetTexture_HealComm", MA.SetTexture_HealComm, true)
 	self:RawHook(UF, "SetFrameLevel_HealComm", MA.SetFrameLevel_HealComm, true)
@@ -19,7 +26,7 @@ function MA:Initialize()
 
 	EP:RegisterPlugin(addonName, nil)
 
-	print(format("%sElvUI_MirrorAbsorb|r Version %s%s|r loaded.", E.media.hexvaluecolor, E.media.hexvaluecolor, GetAddOnMetadata("ElvUI_MirrorAbsorb", "Version")))
+	print(format("%sElvUI_MirrorAbsorb|r Version %s%s|r loaded.", E.media.hexvaluecolor, E.media.hexvaluecolor, C_AddOns_GetAddOnMetadata("ElvUI_MirrorAbsorb", "Version")))
 end
 
 function MA:SetAlpha_HealComm(obj, alpha)

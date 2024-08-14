@@ -1,4 +1,4 @@
-## Interface: 100200
+## Interface: 110002
 ## Author: WRMSR
 ## Version: 1.0
 ## Title: |cff1784d1ElvUI_MirrorAbsorb|r
