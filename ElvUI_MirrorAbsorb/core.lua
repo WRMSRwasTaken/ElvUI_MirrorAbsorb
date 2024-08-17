@@ -135,8 +135,8 @@ function MA:Configure_HealComm(frame)
 		pred.reverseFill = reverseFill
 		pred.healthBarTexture = healthBarTexture
 
-        -- don't let the check for "REVERSED" interfere here, as this is a completely new mode no matter what the player has set
-        absorbBar:SetReverseFill(reverseFill)
+		-- don't let the check for "REVERSED" interfere here, as this is a completely new mode no matter what the player has set
+		absorbBar:SetReverseFill(reverseFill)
 
 		overHealAbsorbBar:SetReverseFill(not reverseFill)
 		overAbsorbBar:SetReverseFill(reverseFill)
