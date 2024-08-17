@@ -1,8 +1,8 @@
 ## Interface: 110002
 ## Author: WRMSR
-## Version: 1.0
-## Title: |cff1784d1ElvUI_MirrorAbsorb|r
-## Notes: This is a test please ignore
+## Version: 1.1
+## Title: |cff1784d1ElvUI |cffffff00Mirror|cffff0000Absorb|r
+## Notes: Adds a mirrored absorb mode to ElvUI's unit frames to better differentiate between (heal)absorbs and over(heal)aborbs
 ## RequiredDeps: ElvUI
 
 core.lua

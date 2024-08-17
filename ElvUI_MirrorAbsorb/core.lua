@@ -1,4 +1,4 @@
-local E, L, V, P, G, _ = unpack(ElvUI); --Import: Engine, Locales, PrivateDB, ProfileDB, GlobalDB
+local E, L, V, P, G, _ = unpack(ElvUI)
 local MA = E:NewModule('MA', 'AceEvent-3.0', 'AceHook-3.0')
 local UF = E:GetModule('UnitFrames')
 local LSM = E.Libs.LSM
@@ -8,50 +8,42 @@ local addonName, Engine = ...
 local C_AddOns_GetAddOnMetadata = C_AddOns.GetAddOnMetadata
 
 function MA:Initialize()
-	-- We are basically hooking every function in Core/Modules/UnitFrames/Elements/HealPrediction.lua with a RawHook,
-	-- which means we're replacing the original functions with those below.
-	-- This might not be needed and could be replaced with SecureHook and remove the init functions for all bars
-	-- except our new overAbsorbBar and overHealAbsorbBar bars. This needs to be tested and could result in less code in this file.
-	-- We're already only doing a SecureHook on Configure_HealComm because we actually don't need to touch the initialization there
-	-- of myBar, otherBar, absorbBar and healAbsorbBar, so we're just cloning those steps there for our new overAbsorbBar and overHealAbsorbBar.
+	-- We are basically hooking every function in Core/Modules/UnitFrames/Elements/HealPrediction.lua,
+	-- which means we're either appending or completely replacing the functions in there.
+	-- The only functions which need to be completely overridden are "Construct_HealComm" and "UpdateHealComm", 
+	-- "Construct_HealComm" has the whole "prediction" object we need the new bars in and "UpdateHealComm" is the actual calculation logic.
+	-- For the rest, it's sufficient to just "clone" the code lines needed for initializing our new overAbsorbBar and overHealAbsorbBar,
+	-- so we're not touching myBar, otherBar, absorbBar and healAbsorbBar at all and just run the code for the new bars afterwards.
 
-	self:RawHook(UF, "SetAlpha_HealComm", MA.SetAlpha_HealComm, true)
-	self:RawHook(UF, "SetTexture_HealComm", MA.SetTexture_HealComm, true)
-	self:RawHook(UF, "SetFrameLevel_HealComm", MA.SetFrameLevel_HealComm, true)
+	-- Modifying "E.options.args.absorbStyle" to display a new 6th option as "Mirrored" would be really nice to make this a bit more configurable
+	-- to run the code in "UpdateHealComm" only when the player actually configures it for that unit, but I haven't really figured this out yet :-(
 
-	self:RawHook(UF, "Construct_HealComm", MA.Construct_HealComm, true)
+	self:SecureHook(UF, "SetAlpha_HealComm", MA.SetAlpha_HealComm) -- Post Hook
+	self:SecureHook(UF, "SetTexture_HealComm", MA.SetTexture_HealComm) -- Post Hook
+	self:SecureHook(UF, "SetFrameLevel_HealComm", MA.SetFrameLevel_HealComm) -- Post Hook
 
-	self:SecureHook(UF, "Configure_HealComm", MA.Configure_HealComm)
-	self:RawHook(UF, "UpdateHealComm", MA.UpdateHealComm, true)
+	self:RawHook(UF, "Construct_HealComm", MA.Construct_HealComm, true) -- Replace
+
+	self:SecureHook(UF, "Configure_HealComm", MA.Configure_HealComm) -- Post Hook
+
+	self:RawHook(UF, "UpdateHealComm", MA.UpdateHealComm, true) -- Replace
 
 	EP:RegisterPlugin(addonName, nil)
-
-	print(format("%sElvUI_MirrorAbsorb|r Version %s%s|r loaded.", E.media.hexvaluecolor, E.media.hexvaluecolor, C_AddOns_GetAddOnMetadata("ElvUI_MirrorAbsorb", "Version")))
+	
+	print(format("%sElvUI |cffffff00Mirror|cffff0000Absorb|cffffffff Version %s%s|r loaded.", E.media.hexvaluecolor, E.media.hexvaluecolor, C_AddOns_GetAddOnMetadata("ElvUI_MirrorAbsorb", "Version")))
 end
 
 function MA:SetAlpha_HealComm(obj, alpha)
-	obj.myBar:SetAlpha(alpha)
-	obj.otherBar:SetAlpha(alpha)
-	obj.absorbBar:SetAlpha(alpha)
-	obj.healAbsorbBar:SetAlpha(alpha)
 	obj.overAbsorbBar:SetAlpha(alpha)
 	obj.overHealAbsorbBar:SetAlpha(alpha)
 end
 
 function MA:SetTexture_HealComm(obj, texture)
-	obj.myBar:SetStatusBarTexture(texture)
-	obj.otherBar:SetStatusBarTexture(texture)
-	obj.absorbBar:SetStatusBarTexture(texture)
-	obj.healAbsorbBar:SetStatusBarTexture(texture)
 	obj.overAbsorbBar:SetStatusBarTexture(texture)
 	obj.overHealAbsorbBar:SetStatusBarTexture(texture)
 end
 
 function MA:SetFrameLevel_HealComm(obj, level)
-	obj.myBar:SetFrameLevel(level)
-	obj.otherBar:SetFrameLevel(level)
-	obj.absorbBar:SetFrameLevel(level)
-	obj.healAbsorbBar:SetFrameLevel(level)
 	obj.overAbsorbBar:SetFrameLevel(level)
 	obj.overHealAbsorbBar:SetFrameLevel(level)
 end
@@ -123,8 +115,7 @@ function MA:Configure_HealComm(frame)
 	if db and db.enable then
 		local pred = frame.HealthPrediction
 		local parent = pred.parent
-		local myBar = pred.myBar
-		local otherBar = pred.otherBar
+
 		local absorbBar = pred.absorbBar
 		local overAbsorbBar = pred.overAbsorbBar
 		local healAbsorbBar = pred.healAbsorbBar
@@ -143,10 +134,9 @@ function MA:Configure_HealComm(frame)
 
 		pred.reverseFill = reverseFill
 		pred.healthBarTexture = healthBarTexture
-		pred.myBarTexture = myBar:GetStatusBarTexture()
-		pred.otherBarTexture = otherBar:GetStatusBarTexture()
 
-		UF:SetTexture_HealComm(pred, UF.db.colors.transparentHealth and E.media.blankTex or LSM:Fetch('statusbar', UF.db.statusbar))
+        -- don't let the check for "REVERSED" interfere here, as this is a completely new mode no matter what the player has set
+        absorbBar:SetReverseFill(reverseFill)
 
 		overHealAbsorbBar:SetReverseFill(not reverseFill)
 		overAbsorbBar:SetReverseFill(reverseFill)
@@ -210,8 +200,8 @@ function MA:UpdateHealComm(_, myIncomingHeal, otherIncomingHeal, absorb, healAbs
 
 	local pred = frame.HealthPrediction
 
-	local myBar = pred.myBar
-	local otherBar = pred.otherBar
+	-- local myBar = pred.myBar
+	-- local otherBar = pred.otherBar
 
 	local healAbsorbBar = pred.healAbsorbBar
 	local absorbBar = pred.absorbBar
